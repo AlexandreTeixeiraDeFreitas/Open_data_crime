@@ -20,7 +20,6 @@ services:
       retries: 5
 
   flask-backend:
-    image: python:3.9-slim
     container_name: flask-backend
     build:
       context: ./backend
@@ -38,13 +37,12 @@ services:
     command: flask run --host=0.0.0.0
 
   react-frontend:
-    image: node:16
     container_name: react-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -54,13 +52,12 @@ services:
         condition: service_started
 
   flask-ia:
-    image: python:3.9-slim
     container_name: flask-ia
     build:
       context: ./ia
       dockerfile: Dockerfile
     ports:
-      - "5001:5000"
+      - "5001:5001"
     volumes:
       - ./ia:/app
     environment:
