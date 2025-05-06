@@ -151,10 +151,11 @@ def process_batch(batch_df, batch_id):
     existing_ids = set()
 
   # Insertion des nouveaux crimes détectés
-    print("Insertion des nouveaux crimes détectés")
     if new_df_list:
+        print("combine dataframes")
         # Si on a plusieurs DataFrame, on les combine avec unionAll
         full_df = combine_dataframes(new_df_list)
+        print("Insertion des nouveaux crimes détectés")
         # On insère toutes les nouvelles lignes dans la table PostgreSQL "crimes"
         full_df.write.jdbc(jdbc_url, "crimes", mode="append", properties=db_props)
         # Affichage du nombre de lignes insérées
@@ -176,7 +177,7 @@ def process_batch(batch_df, batch_id):
 
     # Si on a au moins 900 lignes non envoyées, on les prépare pour Kafka
     if joined_df.count() >= 900:
-        batch_to_send = joined_df.limit(900)
+        batch_to_send = joined_df
         kafka_df = batch_to_send.selectExpr("to_json(struct(*)) AS value")
 
         # Envoi au topic Kafka 'train-data'
