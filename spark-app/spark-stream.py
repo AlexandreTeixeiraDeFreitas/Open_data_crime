@@ -135,11 +135,12 @@ def process_batch(batch_df, batch_id):
 
     # Récupération des lignes à envoyer à l’IA
     query = """
-        SELECT c.*
+        SELECT DISTINCT ON (c.cmplnt_num) c.*
         FROM "crimes" c
         WHERE NOT EXISTS (
-            SELECT 1 FROM "crime_train" t WHERE t.id = c.cmplnt_num
+        SELECT 1 FROM "crime_train" t WHERE t.id = c.cmplnt_num
         )
+        ORDER BY c.cmplnt_num, c.rpt_dt DESC
     """
     joined_df = spark.read.jdbc(jdbc_url, f"({query}) AS sub", properties=db_props)
 
@@ -154,8 +155,9 @@ def process_batch(batch_df, batch_id):
             .save()
 
         sent_ids = batch_to_send.select("cmplnt_num").withColumnRenamed("cmplnt_num", "id").withColumn("status", lit("sent"))
+        sent_count = sent_ids.count()
         sent_ids.write.jdbc(jdbc_url, "crime_train", mode="append", properties=db_props)
-        print(f"📤 {sent_ids.count()} lignes envoyées à l'IA.")
+        print(f"📤 {sent_count} lignes envoyées à l'IA.")
     else:
         print(f"⏳ Moins de 900 lignes disponibles à envoyer à l'IA ({joined_df.count()})")
 
