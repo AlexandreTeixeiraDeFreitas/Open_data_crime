@@ -1,49 +1,63 @@
 import React, { useRef, useEffect, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import Filter from './Filter';
 
 type CrimesTypes = {
-  id: number,
+  cmplnt_num: number,
   latitude: number,
   longitude	: number,
-  date_crime: Date,
-  hr_crime: string,
-  quatier: string,
-  type_crime: string
+  cmplnt_fr_dt: Date,
+  cmplnt_fr_tm: string,
+  boro_nm: string,
+  law_cat_cd: string
 }
+
+type ParamType = {
+  selectedParam: string,
+  searchParam: string
+}
+
+const url = "http://localhost:5000/crimes";
 
 const DynamicMap: React.FC = () => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [crimes, setCrimes] = useState<CrimesTypes[] | []>([])
-  useEffect(() => {
-    const fetchCrimesData = async (url: string) => {
-      try {
-        const request = await fetch(url);
-        const response = await request.json();
-        if (response) {
-          return response.map((r: any) => ({
-          id: r.cmplnt_num,
+  const [param, setParam] = useState<ParamType>({
+    selectedParam: '',
+    searchParam: ''
+  })
+  const fetchCrimesData = async (url: string, option?: ParamType) => {
+    try {
+      const request = await fetch(`${url}?${option?.searchParam ? "$where=" + option.selectedParam + " like '%25" + option.searchParam + "%25'" : ''}`);
+      const response = await request.json();
+      if (response) {
+        return response.map((r: any) => ({
+          cmplnt_num: r.cmplnt_num,
           latitude: parseFloat(r.latitude),
           longitude: parseFloat(r.longitude),
-          date_crime: new Date(r.cmplnt_fr_dt),
-          hr_crime: r.cmplnt_fr_tm,
-          quatier: r.boro_nm,
-          type_crime: r.law_cat_cd,
-          })) as CrimesTypes[];
-        } else {
-          return [];
-        }
-      } catch (error) {
-        console.error("Error fetching crimes data:", error);
+          cmplnt_fr_dt: new Date(r.cmplnt_fr_dt),
+          cmplnt_fr_tm: r.cmplnt_fr_tm,
+          boro_nm: r.boro_nm,
+          law_cat_cd: r.law_cat_cd,
+        })) as CrimesTypes[];
+      } else {
         return [];
       }
-    };
+    } catch (error) {
+      console.error("Error fetching crimes data:", error);
+      return [];
+    }
+  };
 
+  useEffect(()=> {
     (async () => {
-      const url = "https://data.cityofnewyork.us/resource/5uac-w243.json?$limit=1000&$offset=1";
       const data = await fetchCrimesData(url);
       setCrimes(data);
     })();
+  }, [])
+
+  useEffect(() => {
     if (mapRef.current) {
       const map = L.map(mapRef.current).setView([40.7128, -74.0060], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -54,10 +68,10 @@ const DynamicMap: React.FC = () => {
           L.marker([crime.latitude, crime.longitude])
             .addTo(map)
             .bindPopup(`
-              <strong>Type:</strong> ${crime.type_crime}<br />
-              <strong>Date:</strong> ${crime.date_crime.toLocaleDateString()}<br />
-              <strong>Time:</strong> ${crime.hr_crime}<br />
-              <strong>Neighborhood:</strong> ${crime.quatier}
+              <strong>Type:</strong> ${crime.law_cat_cd}<br />
+              <strong>Date:</strong> ${crime.cmplnt_fr_dt.toLocaleDateString()}<br />
+              <strong>Time:</strong> ${crime.cmplnt_fr_tm}<br />
+              <strong>Neighborhood:</strong> ${crime.boro_nm}
             `);
         }
       });
@@ -65,9 +79,53 @@ const DynamicMap: React.FC = () => {
         map.remove();
       };
     }
-  }, []);
+  }, [crimes]);
+
+  const handleFilterChange = (searchTerm: string, optionSelected: string, event: React.ChangeEvent) => {
+    event.preventDefault();
+    const updatedParam = { searchParam: searchTerm.toUpperCase(), selectedParam: optionSelected };
+    setParam(updatedParam);
+    (async () => {
+      const data = await fetchCrimesData(url, updatedParam);
+      setCrimes(data);
+    })();
+  };
+
+  const option = [
+    {
+      name: 'latitude',
+      value: 'latitude'
+    },
+    {
+      name: 'date',
+      value: 'cmplnt_fr_dt',
+    },
+    {
+      name: 'hour',
+      value: 'cmplnt_fr_tm'
+    },
+    {
+      name: 'city',
+      value: 'boro_nm'
+    },
+    {
+      name: 'type of the crime',
+      value: 'law_cat_cd'
+    }
+  ]
   
-  return <div ref={mapRef} style={{ height: '100%', width: '100%', position: 'fixed' }}></div>;
+  return (
+    <>
+      <Filter 
+        options={option} 
+        onFilterChange={handleFilterChange}
+      />
+      <div 
+        ref={mapRef} 
+        style={{ height: '100%', width: '100%', position: 'fixed' }}
+      />
+    </>
+  );
 };
 
 export default DynamicMap;
