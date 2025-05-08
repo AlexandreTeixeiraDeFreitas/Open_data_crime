@@ -39,10 +39,27 @@ def process_batch(batch_df, batch_id):
     unique_jsons = {}
     for row in raw_rows:
         try:
-            crime = json.loads(row["raw"])
-            event_id = crime.get("event_id")
-            if event_id:
-                unique_jsons[event_id] = json.dumps(crime)
+            parsed = json.loads(row["raw"])
+
+            # Cas 1 : objet JSON unique
+            if isinstance(parsed, dict):
+                event_id = parsed.get("event_id")
+                if event_id:
+                    unique_jsons[event_id] = json.dumps(parsed)
+
+            # Cas 2 : liste d’objets JSON
+            elif isinstance(parsed, list):
+                for item in parsed:
+                    if isinstance(item, dict):
+                        event_id = item.get("event_id")
+                        if event_id:
+                            unique_jsons[event_id] = json.dumps(item)
+                    else:
+                        logger.error(f"Ignoré : élément non-dict dans liste JSON : {item}")
+
+            else:
+                logger.error(f"Ignoré : contenu JSON non pris en charge : {parsed}")
+
         except Exception as e:
             logger.error(f"Erreur de parsing JSON : {e}")
 
