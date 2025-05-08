@@ -45,6 +45,22 @@ train_schema = StructType([
     StructField("status", StringType())
 ])
 
+schema_event = StructType([
+    StructField("event_id", IntegerType(), True),
+    StructField("event_name", StringType(), True),
+    StructField("start_date_time", TimestampType(), True),
+    StructField("end_date_time", TimestampType(), True),
+    StructField("event_agency", StringType(), True),
+    StructField("event_type", StringType(), True),
+    StructField("event_borough", StringType(), True),
+    StructField("event_location", StringType(), True),
+    StructField("event_street_side", StringType(), True),
+    StructField("street_closure_type", StringType(), True),
+    StructField("community_board", StringType(), True),
+    StructField("police_precinct", StringType(), True)
+])
+
+
 def cast_columns_to_schema(df, schema):
     for field in schema.fields:
         if field.name not in df.columns:
