@@ -12,14 +12,17 @@ RUN apt-get update \
 # Copier tout le code IA (train.py, retrain.py, predict.py, utils.py, 
 # flask_kafka_api.py, entrypoint.sh, requirements.txt…) dans /app
 COPY . /app
+COPY ./entrypoint.sh .
 
 # Installer les dépendances Python et rendre l’entrypoint exécutable
 RUN pip install --no-cache-dir -r requirements.txt \
  && chmod +x entrypoint.sh
+
+RUN pip install pandas
 
 # Exposer le port de l’API Flask
 EXPOSE 5001
 
 # Au démarrage, ./entrypoint.sh vérifiera et entraînera si besoin,
 # puis lancera flask_kafka_api.py (ou predict.py selon votre script)
-ENTRYPOINT ["./entrypoint.sh"]
+CMD ["sh", "./entrypoint.sh"]

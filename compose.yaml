@@ -69,13 +69,12 @@ services:
     image: python:3.13-slim
     container_name: ia-retrain
     ports:
-      - "5001:5001"
+      - "5002:5002"
     volumes:
       - ./ia:/app
     depends_on:
       kafka:
         condition: service_healthy
-    command: ["python", "retrain.py"]
 
   kafka:
     image: wurstmeister/kafka
