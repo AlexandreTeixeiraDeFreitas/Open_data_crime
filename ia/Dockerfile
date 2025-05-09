@@ -1,28 +1,24 @@
-# Utilise une image Python légère
 FROM python:3.13-slim
 
-# Création du dossier de travail
 WORKDIR /app
 
-# Installer les dépendances système nécessaires (build-essential pour xgboost, etc.)
 RUN apt-get update \
- && apt-get install -y --no-install-recommends build-essential \
+ && apt-get install -y --no-install-recommends build-essential bash \
  && rm -rf /var/lib/apt/lists/*
 
-# Copier tout le code IA (train.py, retrain.py, predict.py, utils.py, 
-# flask_kafka_api.py, entrypoint.sh, requirements.txt…) dans /app
+# Copier tout le projet
 COPY . /app
-COPY ./entrypoint.sh .
 
-# Installer les dépendances Python et rendre l’entrypoint exécutable
+# Copier aussi une version propre d'entrypoint.sh à la racine pour qu'il ne soit pas écrasé par le volume
+COPY ./entrypoint.sh /entrypoint_clean.sh
+
+# Nettoyer les CRLF sur la version propre
+RUN sed -i 's/\r$//' /entrypoint_clean.sh && chmod +x /entrypoint_clean.sh
+
 RUN pip install --no-cache-dir -r requirements.txt \
- && chmod +x entrypoint.sh
+ && pip install pandas
 
-RUN pip install pandas
-
-# Exposer le port de l’API Flask
 EXPOSE 5001
 
-# Au démarrage, ./entrypoint.sh vérifiera et entraînera si besoin,
-# puis lancera flask_kafka_api.py (ou predict.py selon votre script)
-CMD ["sh", "./entrypoint.sh"]
+# Lancer la version propre
+CMD ["bash", "/entrypoint_clean.sh"]
