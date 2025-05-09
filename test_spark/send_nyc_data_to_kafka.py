@@ -1,10 +1,16 @@
+#!/usr/bin/env python3
 import json
 import requests
+import time
 from kafka import KafkaProducer
 
 # Configuration Kafka
-KAFKA_BROKER = 'kafka:9092'  # Change si nécessaire
+KAFKA_BROKER = 'kafka:9092'
 TOPIC_NAME = 'send-data'
+
+# API NYC
+BASE_URL = "https://data.cityofnewyork.us/resource/5uac-w243.json"
+LIMIT = 1000  # Nombre d'enregistrements par page
 
 # Initialisation du producteur Kafka
 producer = KafkaProducer(
@@ -12,27 +18,46 @@ producer = KafkaProducer(
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
 
-# Appel de l'API publique NYC
-url = "https://data.cityofnewyork.us/resource/5uac-w243.json"
+def fetch_page(offset):
+    params = {"$limit": LIMIT, "$offset": offset}
+    try:
+        response = requests.get(BASE_URL, params=params, timeout=10)
+        if response.status_code == 500:
+            print(f"❌ Erreur 500 détectée à l'offset {offset}. Arrêt.")
+            return None
+        return response.json()
+    except Exception as e:
+        print(f"❌ Erreur HTTP à l'offset {offset}: {e}")
+        return None
 
-try:
-    response = requests.get(url)
-    response.raise_for_status()  # Lève une exception en cas d'erreur HTTP
+def main():
+    offset = 0
+    page_count = 0
+    total_sent = 0
 
-    data = response.json()
-    
-    print(f"Envoi de {len(data)} enregistrements au topic Kafka '{TOPIC_NAME}'...")
+    while True:
+        print(f"🔄 Récupération de la page offset {offset}...")
+        data = fetch_page(offset)
 
-    # Envoi de chaque objet individuellement dans le topic
-    for record in data:
-        producer.send(TOPIC_NAME, value=record)
+        if data is None or not data:
+            print("✅ Fin des données à envoyer.")
+            break
 
-    producer.flush()
-    print("✅ Données envoyées avec succès.")
+        print(f"📄 Page {page_count + 1} : {len(data)} enregistrements à envoyer.")
+        page_count += 1
 
-except requests.RequestException as e:
-    print(f"Erreur lors de l'appel à l'API : {e}")
-except Exception as e:
-    print(f"Erreur inattendue : {e}")
-finally:
-    producer.close()
+        for record in data:
+            producer.send(TOPIC_NAME, value=record)
+            total_sent += 1
+
+        producer.flush()
+        print(f"✅ Page {page_count} envoyée ({len(data)} enregistrements).")
+
+        offset += LIMIT
+        time.sleep(0.5)
+
+    print(f"✅ Terminé : {page_count} pages, {total_sent} enregistrements envoyés au topic '{TOPIC_NAME}'.")
+    producer.close()    
+
+if __name__ == "__main__":
+    main()
