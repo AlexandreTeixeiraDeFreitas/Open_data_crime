@@ -132,5 +132,28 @@ services:
     working_dir: /app
     tty: true
 
+  superset:
+    build:
+      context: ./superset
+      dockerfile: Dockerfile-superset
+    container_name: superset
+    restart: always
+    ports:
+      - "8089:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=mysecretkey
+      - PYTHONPATH=/app/pythonpath
+    depends_on:
+      - postgres
+    volumes:
+      - ./superset_home:/app/superset_home
+    command: >
+      bash -c "
+      superset db upgrade &&
+      superset fab create-admin --username admin --firstname Superset --lastname Admin --email admin@superset.com --password admin || true &&
+      superset init &&
+      superset run -h 0.0.0.0 -p 8088
+      "
+
 volumes: 
   postgres-data:
