@@ -24,7 +24,6 @@ dictConfig({
 })
 
 app = Flask(__name__)
-CORS(app)
 API_URL = 'https://data.cityofnewyork.us/resource/5uac-w243.json'
 KAFKA_TOPIC = 'send-data'
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
@@ -37,7 +36,6 @@ producer = KafkaProducer(
 @app.route('/crimes', methods=['GET'])
 def crimes():
     headers = {'Accept': request.headers.get('Accept', 'application/json')}
-    app.logger.info(f"Request URL: {API_URL}?{request.query_string.decode('utf-8')}")
     resp = requests.get(API_URL, params=request.args, headers=headers)
 
     if resp.status_code == 200:
@@ -50,5 +48,5 @@ def crimes():
 
     return Response(resp.content, status=resp.status_code, content_type=resp.headers.get('Content-Type'))
 
-if __name__ == 'main':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

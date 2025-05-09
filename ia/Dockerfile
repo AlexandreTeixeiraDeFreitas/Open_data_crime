@@ -1,21 +1,25 @@
-# Use the official Python 3.9 slim image as the base image
+# Utilise une image Python légère
 FROM python:3.9-slim
 
-# Set the working directory inside the container
+# Création du dossier de travail
 WORKDIR /app
 
-# Copy the application code into the container
+# Installer les dépendances système nécessaires (build-essential pour xgboost, etc.)
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends build-essential \
+ && rm -rf /var/lib/apt/lists/*
+
+# Copier tout le code IA (train.py, retrain.py, predict.py, utils.py, 
+# flask_kafka_api.py, entrypoint.sh, requirements.txt…) dans /app
 COPY . /app
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Installer les dépendances Python et rendre l’entrypoint exécutable
+RUN pip install --no-cache-dir -r requirements.txt \
+ && chmod +x entrypoint.sh
 
-# Set environment variables
-ENV FLASK_APP=app.py
-ENV FLASK_ENV=development
+# Exposer le port de l’API Flask
+EXPOSE 5001
 
-# Expose the port the app runs on
-EXPOSE 5000
-
-# Command to run the Flask application
-CMD ["flask", "run", "--host=0.0.0.0"]
+# Au démarrage, ./entrypoint.sh vérifiera et entraînera si besoin,
+# puis lancera flask_kafka_api.py (ou predict.py selon votre script)
+ENTRYPOINT ["./entrypoint.sh"]

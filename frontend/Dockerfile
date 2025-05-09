@@ -12,8 +12,15 @@ RUN npm i vite
 # Install dependencies
 RUN npm install
 
+
+
 # Copy the rest of the application code to the working directory
 COPY . .
+
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
+# Build the React app
+RUN npm run build
 
 # Expose the port the app runs on
 EXPOSE 5173
