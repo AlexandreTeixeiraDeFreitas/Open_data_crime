@@ -99,6 +99,11 @@ const DynamicMap: React.FC = () => {
     })();
   };
 
+  const handleSumbitPrediction = async (City: string, date: string) => {
+    const formatedDate = new Date(date);
+    
+  }
+
   const option = [
     {
       name: 'latitude',
@@ -128,6 +133,7 @@ const DynamicMap: React.FC = () => {
         options={option} 
         onFilterChange={handleFilterChange}
       />
+      <AskPredict/>
       <div 
         ref={mapRef} 
         style={{ height: '100%', width: '100%', position: 'fixed' }}

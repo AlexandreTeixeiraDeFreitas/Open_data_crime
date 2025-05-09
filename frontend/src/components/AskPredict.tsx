@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 interface AskPredictProps {
-    onSubmit: (city: string, date: string) => void;
+    onSubmit: (city: string, date: string) => Promise<void>; // Explicitly typed function
 }
 
 const AskPredict: React.FC<AskPredictProps> = ({ onSubmit }) => {
