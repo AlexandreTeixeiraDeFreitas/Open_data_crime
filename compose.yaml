@@ -20,7 +20,7 @@ services:
       retries: 5
 
   flask-backend:
-    image: python:3.9-slim
+    image: python:3.13-slim
     container_name: flask-backend
     build:
       context: ./backend
@@ -54,22 +54,27 @@ services:
         condition: service_started
 
   flask-ia:
-    image: python:3.9-slim
-    container_name: flask-ia
     build:
       context: ./ia
       dockerfile: Dockerfile
-    ports:
-      - "5001:5000"
+    container_name: flask-ia
     volumes:
       - ./ia:/app
-    environment:
-      - FLASK_APP=app.py
-      - FLASK_ENV=development
+    ports:
+      - "5001:5001"
     depends_on:
       kafka:
         condition: service_healthy
-    command: flask run --host=0.0.0.0
+
+  ia-retrain:
+    image: python:3.13-slim
+    container_name: ia-retrain
+    volumes:
+      - ./ia:/app
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: ["python", "retrain.py"]
 
   kafka:
     image: wurstmeister/kafka

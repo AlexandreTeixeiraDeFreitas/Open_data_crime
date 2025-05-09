@@ -1,0 +1,1 @@
+diviser en 3 fichiers un pour l'entrainement, un pour le réentrainement, et 1 pour le /predict
