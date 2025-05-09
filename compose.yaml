@@ -20,7 +20,7 @@ services:
       retries: 5
 
   flask-backend:
-    image: python:3.13-slim
+    # image: python:3.13-slim
     container_name: flask-backend
     build:
       context: ./backend
@@ -35,7 +35,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: flask run --host=0.0.0.0
+    # command: flask run --host=0.0.0.0
 
   react-frontend:
     container_name: react-frontend
