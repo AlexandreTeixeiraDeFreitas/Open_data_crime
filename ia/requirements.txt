@@ -1,2 +1,9 @@
 Flask
 flask-cors
+kafka-python
+pandas
+numpy
+joblib
+scikit-learn
+xgboost
+requests
