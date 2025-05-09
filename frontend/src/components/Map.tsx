@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Filter from './Filter';
+import AskPredict from './AskPredict';
 
 type CrimesTypes = {
   cmplnt_num: number,
@@ -10,7 +11,7 @@ type CrimesTypes = {
   cmplnt_fr_dt: Date,
   cmplnt_fr_tm: string,
   boro_nm: string,
-  law_cat_cd: string
+  pd_desc: string
 }
 
 type ParamType = {
@@ -39,7 +40,7 @@ const DynamicMap: React.FC = () => {
           cmplnt_fr_dt: new Date(r.cmplnt_fr_dt),
           cmplnt_fr_tm: r.cmplnt_fr_tm,
           boro_nm: r.boro_nm,
-          law_cat_cd: r.law_cat_cd,
+          pd_desc: r.pd_desc,
         })) as CrimesTypes[];
       } else {
         return [];
@@ -68,7 +69,7 @@ const DynamicMap: React.FC = () => {
           L.marker([crime.latitude, crime.longitude])
             .addTo(map)
             .bindPopup(`
-              <strong>Type:</strong> ${crime.law_cat_cd}<br />
+              <strong>Type:</strong> ${crime.pd_desc}<br />
               <strong>Date:</strong> ${crime.cmplnt_fr_dt.toLocaleDateString()}<br />
               <strong>Time:</strong> ${crime.cmplnt_fr_tm}<br />
               <strong>Neighborhood:</strong> ${crime.boro_nm}
@@ -85,6 +86,13 @@ const DynamicMap: React.FC = () => {
     event.preventDefault();
     const updatedParam = { searchParam: searchTerm.toUpperCase(), selectedParam: optionSelected };
     setParam(updatedParam);
+
+    // Add a threshold to limit the request
+    if (searchTerm.length < 4) {
+      console.warn("Search term must be at least 3 characters long.");
+      return;
+    }
+
     (async () => {
       const data = await fetchCrimesData(url, updatedParam);
       setCrimes(data);
@@ -110,7 +118,7 @@ const DynamicMap: React.FC = () => {
     },
     {
       name: 'type of the crime',
-      value: 'law_cat_cd'
+      value: 'pd_desc'
     }
   ]
   

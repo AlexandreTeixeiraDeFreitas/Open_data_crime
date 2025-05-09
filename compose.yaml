@@ -66,7 +66,6 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    command: flask run --host=0.0.0.0
 
   kafka:
     image: wurstmeister/kafka
