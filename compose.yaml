@@ -6,7 +6,7 @@ services:
     image: postgres:13
     container_name: postgres
     ports:
-      - "5432:5432"
+      - 5432:5432
     environment:
       POSTGRES_USER: crimenyc
       POSTGRES_PASSWORD: admin
@@ -43,7 +43,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "5173:5173"
+      - 5173:5173
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -57,11 +57,10 @@ services:
     build:
       context: ./ia
       dockerfile: Dockerfile
-    container_name: flask-ia
     volumes:
       - ./ia:/app
     ports:
-      - "5001:5001"
+      - 5001:5001
     depends_on:
       kafka:
         condition: service_healthy
@@ -69,6 +68,7 @@ services:
   ia-retrain:
     image: python:3.13-slim
     container_name: ia-retrain
+    ports:
       - "5001:5001"
     volumes:
       - ./ia:/app
