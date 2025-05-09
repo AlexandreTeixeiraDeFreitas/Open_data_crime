@@ -143,7 +143,7 @@ def process_batch(batch_df, batch_id):
     """
     joined_df = spark.read.jdbc(jdbc_url, f"({query}) AS sub", properties=db_props)
 
-    if joined_df.count() >= 900:
+    if joined_df.count() >= 9:
         batch_to_send = joined_df
         kafka_df = batch_to_send.selectExpr("to_json(struct(*)) AS value")
 
