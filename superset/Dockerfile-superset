@@ -7,6 +7,7 @@ RUN apt-get update && \
     pip install --no-cache-dir \
         psycopg2-binary \
         pyhive[hive] \
+        Flask-Mail \
         thrift \
         thrift-sasl \
         sasl \

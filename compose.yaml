@@ -90,7 +90,7 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://:9092,INTERNAL://:9093
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092, INTERNAL://kafka:9093
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_CREATE_TOPICS: "send-data:1:1,train-data:1:1"
+      KAFKA_CREATE_TOPICS: "send-data:1:1,train-data:1:1,save-predict:1:1"
       KAFKA_LOG_RETENTION_BYTES: 1073741824
     depends_on:
       - zookeeper
@@ -156,11 +156,13 @@ services:
       - .venv
     environment:
       - SUPERSET_SECRET_KEY=mysecretkey
+      - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
       - PYTHONPATH=/app/pythonpath
     depends_on:
       - postgres
     volumes:
       - ./superset_home:/app/superset_home
+      - ./superset_home/superset_config.py:/app/pythonpath/superset_config.py
     command: >
       bash -c "
       superset db upgrade &&
@@ -168,6 +170,21 @@ services:
       superset init &&
       superset run -h 0.0.0.0 -p 8088
       "
+
+  forecast-job:
+    build: ./forecast_job
+    container_name: forecast_job
+    environment:
+      - POSTGRES_DB=crimenyc
+      - POSTGRES_USER=crimenyc
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+    volumes:
+      - ./forecast_job:/app
+    depends_on:
+      - postgres
+      - flask-ia
 
 volumes: 
   postgres-data:
