@@ -112,20 +112,26 @@ def forecast_and_store():
     for idx, req in enumerate(prediction_requests, start=1):
         progress = f"🔄 Traitement {idx}/{total} : {req['payload']}"
         print(progress.ljust(120), end='\r', flush=True)
+
         try:
             response = requests.post("http://flask-ia:5001/predict", json=req["payload"], timeout=10)
             response.raise_for_status()
             result = response.json()
             payload = req["payload"]
 
-            # Conversion en objet time
-            prediction_time_obj = datetime.strptime(payload['cmplnt_fr_tm'], '%H:%M:%S').time()
+            # prediction_time_obj = datetime.strptime(payload['cmplnt_fr_tm'], '%H:%M:%S').time()
 
-            rows_to_insert.append((
+            row = (
                 payload['latitude'], payload['longitude'], payload['addr_pct_cd'], payload['boro_nm'],
-                payload['cmplnt_fr_dt'], prediction_time_obj,
+                payload['cmplnt_fr_dt'], payload['cmplnt_fr_tm'],
                 result['prediction'], result['probability']
-            ))
+            )
+            rows_to_insert.append(row)
+
+            # Affiche un exemple tous les 1000
+            if idx % 1000 == 0:
+                print(f"\n📄 Exemple insertion {idx}: {row}", flush=True)
+
         except Exception as e:
             print(f"\n❌ Erreur sur {req['payload']}: {e}", flush=True)
             continue
