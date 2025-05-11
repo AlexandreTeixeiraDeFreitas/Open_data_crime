@@ -47,6 +47,17 @@ def forecast_and_store():
     print("Lancement du script", flush=True)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
+    today = datetime.now().date()
+    print(f"🔍 Vérification des données déjà présentes pour {today}...", flush=True)
+
+    cursor.execute("SELECT 1 FROM crime_forecasts WHERE prediction_date = %s LIMIT 1;", (today,))
+    if cursor.fetchone():
+        print("⚠️ Des données existent déjà pour aujourd'hui. Fin du script.", flush=True)
+        conn.close()
+        return
+    print("✅ Aucune donnée trouvée, démarrage du traitement...", flush=True)
+
+
     print("Sélection des positions déjà existantes", flush=True)
     records = fetch_positions(cursor)
     print("Sélection terminée", flush=True)
