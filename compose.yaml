@@ -152,6 +152,8 @@ services:
     restart: always
     ports:
       - "8089:8088"
+    env_file:
+      - .venv
     environment:
       - SUPERSET_SECRET_KEY=mysecretkey
       - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
