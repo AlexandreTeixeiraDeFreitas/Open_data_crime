@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Filter from './Filter';
+import AskPredict from './AskPredict';
 type CrimesTypes = {
   cmplnt_num: number,
   latitude: number,
@@ -26,6 +27,8 @@ const DynamicMap: React.FC = () => {
     selectedParam: '',
     searchParam: ''
   })
+  const [city, setCity] = useState('')
+  const [date, setDate] = useState('')
   const fetchCrimesData = async (url: string, option?: ParamType) => {
     try {
       const request = await fetch(`${url}?${option?.searchParam ? "$where=" + option.selectedParam + " like '%25" + option.searchParam + "%25'" : ''}`);
@@ -119,9 +122,55 @@ const DynamicMap: React.FC = () => {
       value: 'pd_desc'
     }
   ]
+
+  const handleSubmit = async (city: string, date: string) => {
+    try {
+      const geocodeUrl = `https://nominatim.openstreetmap.org/search?city=${city}&format=json`;
+      const geocodeResponse = await fetch(geocodeUrl);
+      const geocodeData = await geocodeResponse.json();
+
+      if (geocodeData && geocodeData.length > 0) {
+      const { lat, lon, display_name } = geocodeData[0];
+      console.log(`Latitude: ${lat}, Longitude: ${lon}, Address: ${display_name}`);
+      const boro_nm = city.toLocaleUpperCase()
+      const newDate = new Date(date)
+      const formattedDate = `${newDate.getFullYear()}/${(newDate.getMonth() + 1).toString().padStart(2, '0')}/${newDate.getDate().toString().padStart(2, '0')}`;
+      const formattedTime = `${newDate.getHours().toString().padStart(2, '0')}:${newDate.getMinutes().toString().padStart(2, '0')}`;
+      const requestBody = {
+        addr_pct_cd: '114',
+        boro_nm: boro_nm,
+        cmplnt_fr_dt: formattedDate,
+        cmplnt_fr_tm: formattedTime,
+        latitude: lat,
+        longitude: lon
+      };
+      const req = await fetch(`http://localhost:5001/predict`, {
+        method: "POST",
+        headers: {
+          'Content-Type': "application/json",
+        },
+        body: JSON.stringify(requestBody)
+      });
+      const res = await req.json()
+      console.log(res)
+      console.log(`Formatted Date: ${formattedDate}, Formatted Time: ${formattedTime}`);
+      } else {
+      console.warn("No geocode data found for the specified city.");
+      }
+    } catch (error) {
+      console.error("Error fetching geocode data:", error);
+    }
+  }
   
   return (
     <>
+      <AskPredict
+        onSubmit={handleSubmit}
+        city={city}
+        setCity={setCity}
+        date={date}
+        setDate={setDate}
+      />
       <Filter 
         options={option} 
         onFilterChange={handleFilterChange}

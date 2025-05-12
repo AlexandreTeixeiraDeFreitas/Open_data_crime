@@ -7,7 +7,7 @@ from threading import Lock
 from utils import load_pickle
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 # chargement global
 model = load_pickle('xgb_top5_model.pkl')
@@ -19,8 +19,12 @@ lock  = Lock()
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    if not request.is_json:
+        return jsonify({'error': 'Invalid content type. Expected application/json'}), 415
     data = request.get_json()
-    df = pd.DataFrame([data]).dropna(subset=['addr_pct_cd', 'boro_nm', 'cmplnt_fr_dt', 'cmplnt_fr_tm', 'latitude', 'longitude'])
+    if not all(key in data for key in ['addr_pct_cd', 'boro_nm', 'cmplnt_fr_dt', 'cmplnt_fr_tm', 'latitude', 'longitude']):
+        return jsonify({'error': 'Missing required fields in the input data'}), 400
+    df = pd.DataFrame([data])
     df['cmplnt_fr_dt'] = pd.to_datetime(df['cmplnt_fr_dt'], errors='coerce')
     df['hour'] = pd.to_datetime(df['cmplnt_fr_tm'], format='%H:%M:%S', errors='coerce').dt.hour
     df = df.dropna(subset=['cmplnt_fr_dt', 'hour'])

@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface AskPredictProps {
     onSubmit: (city: string, date: string) => Promise<void>; // Explicitly typed function
+    city: string,
+    setCity: (city: string) => void,
+    date: string,
+    setDate: (date: string) => void,
 }
 
-const AskPredict: React.FC<AskPredictProps> = ({ onSubmit }) => {
-    const [city, setCity] = useState('');
-    const [date, setDate] = useState('');
-
+const AskPredict = ({ onSubmit, city, setCity, date, setDate }: AskPredictProps) => {
+    
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (city && date) {
