@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Filter from './Filter';
 import AskPredict from './AskPredict';
+
 type CrimesTypes = {
   cmplnt_num: number,
   latitude: number,
@@ -18,6 +19,13 @@ type ParamType = {
   searchParam: string
 }
 
+type PredictType = {
+  prediction: string,
+  probability: number,
+  lon: number,
+  lat: number,
+}
+
 const url = "http://localhost:5000/crimes";
 
 const DynamicMap: React.FC = () => {
@@ -27,6 +35,7 @@ const DynamicMap: React.FC = () => {
     selectedParam: '',
     searchParam: ''
   })
+  const [predict, setPredict] = useState<PredictType | null>()
   const [city, setCity] = useState('')
   const [date, setDate] = useState('')
   const fetchCrimesData = async (url: string, option?: ParamType) => {
@@ -77,11 +86,26 @@ const DynamicMap: React.FC = () => {
             `);
         }
       });
+      if(predict){
+        const predictionMarker = L.marker([predict.lat, predict.lon], {
+            icon: L.icon({
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-red.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+          }),
+        }).addTo(map);
+
+        predictionMarker.bindPopup(`
+          <strong>Prediction:</strong> ${predict.prediction}<br />
+          <strong>Probability:</strong> ${predict.probability * 100}%
+        `).openPopup();
+      }
       return () => {
         map.remove();
       };
     }
-  }, [crimes]);
+  }, [crimes, predict]);
 
   const handleFilterChange = (searchTerm: string, optionSelected: string, event: React.ChangeEvent) => {
     event.preventDefault();
@@ -152,6 +176,13 @@ const DynamicMap: React.FC = () => {
         body: JSON.stringify(requestBody)
       });
       const res = await req.json()
+      const finalObject: PredictType = {
+        lat: lat,
+        lon: lon, 
+        probability: res.probability,
+        prediction: res.prediction
+      }
+      if(finalObject) setPredict(finalObject)
       console.log(res)
       console.log(`Formatted Date: ${formattedDate}, Formatted Time: ${formattedTime}`);
       } else {
@@ -175,10 +206,10 @@ const DynamicMap: React.FC = () => {
         options={option} 
         onFilterChange={handleFilterChange}
       />
-      <div 
+      {mapRef && <div 
         ref={mapRef} 
         style={{ height: '100%', width: '100%', position: 'fixed' }}
-      />
+      />}
     </>
   );
 };
