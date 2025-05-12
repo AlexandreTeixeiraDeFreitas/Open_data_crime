@@ -1,0 +1,46 @@
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 20px auto;
+  max-width: 600px;
+  width: 90%;
+}
+
+form > label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Appliquer à tous les input et select */
+form > label > input,
+form > label > select,
+form > label > input[type="date"] {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  min-width: 250px;
+}
+
+/* Bouton stylisé */
+form button,
+form > input[type="submit"] {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+form button:hover,
+form > input[type="submit"]:hover {
+  background-color: #0056b3;
+}
