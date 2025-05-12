@@ -24,6 +24,7 @@ dictConfig({
 })
 
 app = Flask(__name__)
+CORS(app)
 API_URL = 'https://data.cityofnewyork.us/resource/5uac-w243.json'
 KAFKA_TOPIC = 'send-data'
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
