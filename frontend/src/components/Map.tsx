@@ -134,8 +134,8 @@ const DynamicMap: React.FC = () => {
       console.log(`Latitude: ${lat}, Longitude: ${lon}, Address: ${display_name}`);
       const boro_nm = city.toLocaleUpperCase()
       const newDate = new Date(date)
-      const formattedDate = `${newDate.getFullYear()}/${(newDate.getMonth() + 1).toString().padStart(2, '0')}/${newDate.getDate().toString().padStart(2, '0')}`;
-      const formattedTime = `${newDate.getHours().toString().padStart(2, '0')}:${newDate.getMinutes().toString().padStart(2, '0')}`;
+      const formattedDate = `${newDate.getFullYear()}-${(newDate.getMonth() + 1).toString().padStart(2, '0')}-${newDate.getDate().toString().padStart(2, '0')}`;
+      const formattedTime = `${newDate.getHours().toString().padStart(2, '0')}:${newDate.getMinutes().toString().padStart(2, '0')}:00`;
       const requestBody = {
         addr_pct_cd: '114',
         boro_nm: boro_nm,
